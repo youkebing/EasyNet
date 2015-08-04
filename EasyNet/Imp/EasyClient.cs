@@ -124,10 +124,13 @@ namespace EasyNet.Imp {
             ms.WriteInt(GetNewID());
             ms.WriteInt(0);
             ms.WriteInt(0);
+            ms.WriteStrs(_handes.Keys.ToArray());
+            /*
             ms.WriteInt(_handes.Count);
             foreach (var v in _handes.Keys) {
                 ms.WriteString(v);
-            }
+            } 
+             */
             PktHelper.ClosePkt(ms);
             var buf = ms.ToArray();
             _Ada.Write(buf, 0, buf.Length, null);
@@ -142,10 +145,8 @@ namespace EasyNet.Imp {
             ms.WriteInt(GetNewID());
             ms.WriteInt(0);
             ms.WriteInt(0);
-            ms.WriteInt(_subhandes.Count);
-            foreach (var v in _subhandes.Keys) {
-                ms.WriteString(v);
-            }
+            ms.WriteStrs(_subhandes.Keys.ToArray());
+
             PktHelper.ClosePkt(ms);
             var buf = ms.ToArray();
             _Ada.Write(buf, 0, buf.Length, null);
