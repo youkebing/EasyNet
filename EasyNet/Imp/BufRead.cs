@@ -18,7 +18,7 @@ namespace EasyNet.Imp {
                 _cnt = buf[offset];
             }
         }
-        int ReadIntLength() {
+        public int ReadInt() {
             if (_length < 4) {
                 throw new Exception("no such data!");
             }
@@ -32,11 +32,8 @@ namespace EasyNet.Imp {
             _length -= 4;
             return i;
         }
-        public int ReadInt() {
-            return ReadIntLength();
-        }
         public byte[] ReadBytes(out int offset, out int length) {
-            length = ReadIntLength();
+            length = ReadInt();
             offset = _offset;
             if (length < 0) {
                 return null;
@@ -63,6 +60,18 @@ namespace EasyNet.Imp {
                 return null;
             }
             return Encoding.UTF8.GetString(_buf, offset, length);
+        }
+
+        public HashSet<string> ReadHashSet() {   
+            int len = ReadInt();
+            if (len < 0) {
+                return null;
+            }
+            var hs = new HashSet<string>(StringComparer.CurrentCultureIgnoreCase);
+            for (int i = 0; i < len; i++) {
+                hs.Add(ReadString());
+            }
+            return hs;
         }
 
         public byte ReadByte() {

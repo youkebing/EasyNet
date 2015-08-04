@@ -194,28 +194,14 @@ namespace EasyNet.Imp {
         }
         //PktType.SyncHandles
         void OnRpcHandles(EasyAdapter adapter, byte[] buf, int offset, int length) {
-            int msgid = _bufhelper.ReadInt();
-            int source = _bufhelper.ReadInt();
-            int destination = _bufhelper.ReadInt();
-            int l = _bufhelper.ReadInt();
-            HashSet<string> hs = new HashSet<string>(StringComparer.CurrentCultureIgnoreCase);
-            for (int i = 0; i < l; i++) {
-                hs.Add(_bufhelper.ReadString());
-            }
+            var hs = _bufhelper.ReadHashSet();
             if (HashChange(adapter.Rpcs, hs)) {
                 RpcsChange();
             }
         }
         //PktType.SyncHandles
         void OnTopicHandles(EasyAdapter adapter, byte[] buf, int offset, int length) {
-            int msgid = _bufhelper.ReadInt();
-            int source = _bufhelper.ReadInt();
-            int destination = _bufhelper.ReadInt();
-            int l = _bufhelper.ReadInt();
-            HashSet<string> hs = new HashSet<string>(StringComparer.CurrentCultureIgnoreCase);
-            for (int i = 0; i < l; i++) {
-                hs.Add(_bufhelper.ReadString());
-            }
+            var hs = _bufhelper.ReadHashSet();
             if (HashChange(adapter.Subs, hs)) {
                 SubsChange();
             }

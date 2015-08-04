@@ -121,9 +121,9 @@ namespace EasyNet.Imp {
             }
             _syncf = false;
             var ms = PktHelper.NewPkt(PktType.RpcHandles);
-            ms.WriteInt(GetNewID());
-            ms.WriteInt(0);
-            ms.WriteInt(0);
+            //ms.WriteInt(GetNewID());
+            //ms.WriteInt(0);
+            //ms.WriteInt(0);
             ms.WriteStrs(_handes.Keys.ToArray());
             /*
             ms.WriteInt(_handes.Count);
@@ -142,9 +142,9 @@ namespace EasyNet.Imp {
             }
             _syncsubsflag = false;
             var ms = PktHelper.NewPkt(PktType.TopicHandles);
-            ms.WriteInt(GetNewID());
-            ms.WriteInt(0);
-            ms.WriteInt(0);
+           // ms.WriteInt(GetNewID());
+            //ms.WriteInt(0);
+            //ms.WriteInt(0);
             ms.WriteStrs(_subhandes.Keys.ToArray());
 
             PktHelper.ClosePkt(ms);
