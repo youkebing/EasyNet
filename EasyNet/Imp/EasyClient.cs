@@ -210,18 +210,20 @@ namespace EasyNet.Imp {
             if (ep.Equals(_ep)) {
                 return;
             }
-            Stop();
+            Stop(null);
             _ep = ep;
         }
-        public void Start() {
+        public void Start(Action on) {
             _sch.Post(InitAdapter);
+            _sch.Post(on);
         }
-        public void Stop() {
+        public void Stop(Action on) {
             SimpleTcpAdapter ada = Interlocked.Exchange(ref _Ada, null);
             if (ada == null) {
                 return;
             }
             ada.Free();
+            _sch.Post(on);
         }
         void OnRead(byte[] buff, int offset, int length) {
             _sch.Post(() => { _OnRead(buff, offset, length); });
@@ -270,10 +272,10 @@ namespace EasyNet.Imp {
                     return;
                 }
                 if (value) {
-                    Start();
+                    Start(null);
                 }
                 else {
-                    Stop();
+                    Stop(null);
                 }
             }
         }

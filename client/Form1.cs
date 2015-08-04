@@ -21,11 +21,10 @@ namespace c1test {
         }
         EasyClient _node = new EasyClient(new IPEndPoint(new IPAddress(new byte[]{192, 168, 168, 229}), 9000), DateTime.Now.Ticks.ToString());
         private void button1_Click(object sender, EventArgs e) {
-            _node.Start();
+            _node.Start(() => { Console.WriteLine(_node.Active.ToString()); });
             _node.RegSub("wuxi", buf => {
                 Console.WriteLine("Sub" + Encoding.UTF8.GetString(buf));
             });
-            Console.WriteLine(_node.Active.ToString());
         }
         private void button2_Click(object sender, EventArgs e) {
             string s = textBox1.Text.Trim();
