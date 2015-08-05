@@ -63,8 +63,8 @@ namespace EasyNet.Imp {
                     ms.Capacity = ll;
                 }
             }
-            catch (Exception ex){
-                throw ex;
+            catch {
+                throw;
             }
         }
         public static MemoryStream NewPkt(PktType p) {

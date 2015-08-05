@@ -28,9 +28,6 @@ namespace EasyNet.Imp {
             set;
         }
         static void On(Action<Socket> on, Socket sc) {
-            if (on == null) {
-                return;
-            }
             try {
                 on(sc);
             }

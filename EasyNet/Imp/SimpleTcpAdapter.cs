@@ -202,12 +202,12 @@ namespace EasyNet.Imp {
                 try {
                     f = _sc.ReceiveAsync(_ReadEventArgs);
                 }
-                catch (Exception e){
+                catch {
                     var ev = Interlocked.Exchange(ref _ReadEventArgs, null);
                     if (ev != null) {
                         UnInitEventArgs(ev, OnReadCompleted);
                     }
-                    throw e;
+                    throw;
                 }
                 if (!f) {
                     OnReadCompleted(this, _ReadEventArgs);
@@ -355,12 +355,12 @@ namespace EasyNet.Imp {
                 try {
                     f = _sc.SendAsync(_WriteEventArgs);
                 }
-                catch (Exception e) {
+                catch {
                     var ev = Interlocked.Exchange(ref _WriteEventArgs, null);
                     if (ev != null) {
                         UnInitEventArgs(ev, OnWriteCompleted);
                     }
-                    throw e;
+                    throw;
                 }
                 if (!f) {
                     try {

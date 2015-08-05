@@ -32,7 +32,7 @@ namespace EasyNet.Imp {
         int GetNewID() {
             return Interlocked.Increment(ref id);
         }
-        static Exception NoActiveException = new Exception("no connect to apigateway");
+        //static Exception NoActiveException = new Exception("no connect to apigateway");
         public void Pub(string k, bool brocast, byte[] buf) {
             _sch.Post(() => {
                 InitAdapter();
