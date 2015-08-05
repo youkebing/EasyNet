@@ -37,15 +37,24 @@ namespace c1test {
         }
 
         private void button3_Click(object sender, EventArgs e) {
-            int cnt = 100;
+            int cnt = 100000;
+            int rr = cnt;
+            DateTime ks = DateTime.Now;
             DateTime sj = DateTime.Now;
             int a = 0;
             for (int i = 0; i < cnt; i++) {
                 string s = textBox2.Text.Trim();
                 var m = ">>" + DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss");
-                Console.WriteLine(m);
+                //Console.WriteLine(m);
                 var buf = Encoding.UTF8.GetBytes(m);
                 _node.Rpc(s, 30 * 1000, buf, (b, ee) => {
+                    var r = Interlocked.Decrement(ref rr);
+                    if (r <= 0) {
+                        var span = DateTime.Now - ks;
+                        Console.WriteLine("___________________");
+                        Console.WriteLine(span.TotalSeconds.ToString());
+                    }
+                    return;
                     int mm = Interlocked.Increment(ref a);
                     if (mm > cnt) {
                         Console.WriteLine((DateTime.Now - sj).TotalSeconds.ToString() + "______________");
