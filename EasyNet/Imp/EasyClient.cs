@@ -143,7 +143,7 @@ namespace EasyNet.Imp {
         MemoryStream ms = new MemoryStream();
         IPEndPoint _ep;
         void InitAdapter() {
-            SimpleTcpAdapter ada = Interlocked.CompareExchange(ref _Ada, null, null);
+            var ada = Interlocked.CompareExchange(ref _Ada, null, null);
             if (ada != null) {
                 if (!ada.Closed) {
                     return;   
@@ -153,7 +153,7 @@ namespace EasyNet.Imp {
                     ada = null;
                 }
             }  
-            Socket sc = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            var sc = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             try {
                 sc.Connect(_ep);
                 ms = new MemoryStream();
@@ -206,7 +206,7 @@ namespace EasyNet.Imp {
             _sch.Post(on);
         }
         public void Stop(Action on) {
-            SimpleTcpAdapter ada = Interlocked.Exchange(ref _Ada, null);
+            var ada = Interlocked.Exchange(ref _Ada, null);
             if (ada == null) {
                 return;
             }
