@@ -30,7 +30,7 @@ namespace EasyNet.Imp {
             return true;
         }
         internal static void ParsePkts(MemoryStream ms, Action<PktType, byte[], int, int> on) {
-            byte[] buf = ms.ToArray();
+            var buf = ms.ToArray();
             int len = (int)ms.Length;
             int offset = 0;
             int ll;
@@ -68,7 +68,7 @@ namespace EasyNet.Imp {
             }
         }
         public static MemoryStream NewPkt(PktType p) {
-            MemoryStream ms = new MemoryStream();
+            var ms = new MemoryStream();
             ms.WriteShort(_Header);
             ms.WriteShort((int)p);
             ms.WriteInt((int)ms.Length - HeadLength);
