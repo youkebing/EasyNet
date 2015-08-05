@@ -29,13 +29,11 @@ namespace EasyNet.Imp {
                     PoolManage.FreeBuf(buf);
                     PktHelper.ParsePkts(_rdms, OnPkt);
                 }
-                catch(Exception ee) {
+                catch {   //(Exception ee) 
                     Free();
                 }
             });
         }
-
-        public string Dest { get; set; }
 
         public HashSet<string> Rpcs = new HashSet<string>(StringComparer.CurrentCulture);
         public HashSet<string> Subs = new HashSet<string>(StringComparer.CurrentCulture);

@@ -158,7 +158,6 @@ namespace EasyNet.Imp {
                 EasyAdapter a = new EasyAdapter(this, sc);
                 _AllAdapters[a.ID] = a;
                 a.OnClose = this.Poll;
-                a.Dest = sc.RemoteEndPoint.ToString();
             });
         }
         public void Excute(Action exc) {
