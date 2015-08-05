@@ -33,8 +33,8 @@ namespace c1test {
                 Console.WriteLine("->>req:" + Encoding.UTF8.GetString(r));
                 var sx = s + ".." + DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss");
                 var buf = Encoding.UTF8.GetBytes(sx);
-                c(null, new Exception("client process exception!"));
-                //c(buf, null);
+                //c(null, new Exception("client process exception!"));
+                c(buf, null);
             });
         }
 

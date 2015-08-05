@@ -164,33 +164,26 @@ namespace EasyNet.Imp {
         public void Excute(Action exc) {
             Sch.Post(exc);
         }
-        //PktType.RpcErr
-        void OnRpcErr(EasyAdapter adapter, byte[] buf, int offset, int length) {
+        void OnRpcAck(PktType t, EasyAdapter adapter, byte[] buf, int offset, int length) {
             int msgid = _bufhelper.ReadInt();
             int source = _bufhelper.ReadInt();
             int destination = _bufhelper.ReadInt();
             EasyAdapter dest = null;
             _AllAdapters.TryGetValue(destination, out dest);
             if (adapter != null) {
-                var ms = PktHelper.NewPkt(PktType.RpcErr);
+                var ms = PktHelper.NewPkt(t);
                 ms.Write(buf, offset, length);
                 PktHelper.ClosePkt(ms);
                 dest.WriteStream(ms);
             }
         }
+        //PktType.RpcErr
+        void OnRpcErr(EasyAdapter adapter, byte[] buf, int offset, int length) {
+            OnRpcAck(PktType.RpcErr, adapter, buf, offset, length);
+        }
         //PktType.RpcResponse
         void OnRpcResponse(EasyAdapter adapter, byte[] buf, int offset, int length) {
-            int msgid = _bufhelper.ReadInt();
-            int source = _bufhelper.ReadInt();
-            int destination = _bufhelper.ReadInt();
-            EasyAdapter dest = null;
-            _AllAdapters.TryGetValue(destination, out dest);
-            if (adapter != null) {
-                var ms = PktHelper.NewPkt(PktType.RpcResponse);
-                ms.Write(buf, offset, length);
-                PktHelper.ClosePkt(ms);
-                dest.WriteStream(ms);
-            }
+            OnRpcAck(PktType.RpcResponse, adapter, buf, offset, length);
         }
         //PktType.SyncHandles
         void OnRpcHandles(EasyAdapter adapter, byte[] buf, int offset, int length) {
