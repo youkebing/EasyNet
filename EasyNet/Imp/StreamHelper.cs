@@ -24,44 +24,6 @@ namespace EasyNet.Imp {
             offset += 4;
             return l;
         }
-        public static byte GetByte(this byte[] buf, ref int offset) {
-            var b = buf[offset];
-            offset++;
-            return b;
-        }
-        public static byte[] GetBytes(this byte[] buf, ref int offset) {
-            int a = GetInt(buf, ref offset);
-            if (a < 0) {
-                return null;
-            }
-            if (a == 0) {
-                return new byte[0];
-            }
-            byte[] b = new byte[a];
-            Buffer.BlockCopy(buf, offset, b, 0, a);
-            offset += a;
-            return b;
-        }
-        public static string[] GetStrs(this byte[] buf, ref int offset) {
-            int a = GetInt(buf, ref offset);
-            if (a < 0) {
-                return null;
-            }
-            string[] ss = new string[a];
-            for (int i = 0; i < a; i++) {
-                ss[i] = GetString(buf, ref offset);
-            }
-            return ss;
-        }
-        public static string GetString(this byte[] buf, ref int offset) {
-            int a = GetInt(buf, ref offset);
-            if (a < 0) {
-                return null;
-            }
-            string s = Encoding.UTF8.GetString(buf, offset, a);
-            offset += a;
-            return s;
-        }
         public static void WriteShort(this MemoryStream ms, int i) {
             byte[] buf = new byte[2];
             buf[1] = (byte)i;
