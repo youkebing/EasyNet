@@ -17,9 +17,10 @@ namespace c1test {
             _node.OnPongMsg = () => { Console.WriteLine("Pong->>" + NowStr()); };
         }
         string NowStr() {
-            return DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss");                        //127,0,0,1     
+            return DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss");                        //  192, 168, 168, 229   
         }
-        EasyClient _node = new EasyClient(new IPEndPoint(new IPAddress(new byte[]{192, 168, 168, 229}), 9000), DateTime.Now.Ticks.ToString());
+
+        EasyClient _node = new EasyClient(new IPEndPoint(new IPAddress(new byte[]{127,0,0,1}), 9000), DateTime.Now.Ticks.ToString());
         private void button1_Click(object sender, EventArgs e) {
             _node.Start(() => { Console.WriteLine(_node.Active.ToString()); });
             _node.RegSub("wuxi", buf => {
@@ -32,12 +33,13 @@ namespace c1test {
                 Console.WriteLine("->>req:" + Encoding.UTF8.GetString(r));
                 var sx = s + ".." + DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss");
                 var buf = Encoding.UTF8.GetBytes(sx);
-                c(buf, null);
+                c(null, new Exception("client process exception!"));
+                //c(buf, null);
             });
         }
 
         private void button3_Click(object sender, EventArgs e) {
-            int cnt = 100000;
+            int cnt = 10;
             int rr = cnt;
             DateTime ks = DateTime.Now;
             DateTime sj = DateTime.Now;
@@ -54,7 +56,7 @@ namespace c1test {
                         Console.WriteLine("___________________");
                         Console.WriteLine(span.TotalSeconds.ToString());
                     }
-                    return;
+                    //return;
                     int mm = Interlocked.Increment(ref a);
                     if (mm > cnt) {
                         Console.WriteLine((DateTime.Now - sj).TotalSeconds.ToString() + "______________");

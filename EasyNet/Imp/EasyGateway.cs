@@ -173,7 +173,7 @@ namespace EasyNet.Imp {
             _AllAdapters.TryGetValue(destination, out dest);
             if (adapter != null) {
                 var ms = PktHelper.NewPkt(PktType.RpcErr);
-                ms.WriteBytes(buf, offset, length);
+                ms.Write(buf, offset, length);
                 PktHelper.ClosePkt(ms);
                 dest.WriteStream(ms);
             }
