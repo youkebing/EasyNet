@@ -237,6 +237,7 @@ namespace EasyNet.Imp {
             }
             _Write();
         }
+
         A First = null;
         A Last = null;
         object _wlocker = new object();

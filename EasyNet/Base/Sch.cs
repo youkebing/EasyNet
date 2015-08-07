@@ -18,14 +18,15 @@ namespace EasyNet.Base {
         }
         readonly int _cnt;
         int _cc = 0;
-        Queue<Action> _lst = new Queue<Action>();
+        LinkedList<Action> _lst = new LinkedList<Action>();
+        //Queue<Action> _lst = new Queue<Action>();
         WaitCallback _Excute;
         public void Post(Action o) {
             if (o == null) {
                 return;
             }
             lock (_lst) {
-                _lst.Enqueue(o);
+                _lst.AddLast(o);
                 if (_cc >= _cnt) {
                     return;
                 }
@@ -61,7 +62,8 @@ namespace EasyNet.Base {
                         _cc--;
                         return;
                     }
-                    aa = _lst.Dequeue();
+                    aa = _lst.First.Value;
+                    _lst.RemoveFirst();
                 }
                 try {
                     aa();
