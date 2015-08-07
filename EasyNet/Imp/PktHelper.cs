@@ -51,7 +51,7 @@ namespace EasyNet.Imp {
                 ll = (int)ms.Length - offset;
                 ms.SetLength(0);
                 ms.Write(buf, offset, ll);
-                int max = 1024 * 1024;
+                int max = 102 * 1024;
                 if (ms.Capacity < max) {
                     return;
                 }

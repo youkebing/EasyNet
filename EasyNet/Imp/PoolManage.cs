@@ -7,7 +7,7 @@ using System.Text;
 namespace EasyNet.Imp {
     internal static class PoolManage {
         readonly static EvPool _evPool = new EvPool(100);
-        readonly static BufPool _bufPool = new BufPool(100, 1024 * 5);
+        readonly static BufPool _bufPool = new BufPool(2000, 1024 * 5);
         public static void FreeBuf(byte[] buf) {
             if ((buf == null) || (buf.Length != 1024 * 5)) {
                 return;

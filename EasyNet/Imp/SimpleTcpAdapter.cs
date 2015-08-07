@@ -36,9 +36,9 @@ namespace EasyNet.Imp {
             }
         }
         static readonly APool _aPool = new APool(3000);
-        public int RecCNT = 0;
-        public int SendCNT = 0;
-        public int PktCNT = 0;
+        //public int RecCNT = 0;
+        //public int SendCNT = 0;
+        //public int PktCNT = 0;
         public EndPoint RemoteEndPoint;
         SocketAsyncEventArgs _ReadEventArgs;
         SocketAsyncEventArgs _WriteEventArgs;
@@ -100,7 +100,7 @@ namespace EasyNet.Imp {
                 int len = _ReadEventArgs.BytesTransferred;
                 int offset = _ReadEventArgs.Offset;
                 var buf = _ReadEventArgs.Buffer;
-                RecCNT += len;
+                //RecCNT += len;
                 if ((len <= 0) || (_ReadEventArgs.SocketError != SocketError.Success)) {
                     Free();
                     len = 0;
@@ -226,7 +226,7 @@ namespace EasyNet.Imp {
             return string.Join(" ", s);
         }
         public void Write(byte[] buf, int offset, int length, Action<Exception> on) {
-            Interlocked.Increment(ref PktCNT);
+            //Interlocked.Increment(ref PktCNT);
             A a;
             if (Closed) {
                 if (on != null) {
@@ -349,7 +349,7 @@ namespace EasyNet.Imp {
             }
             try {
                 //Console.WriteLine("sned " + ll);
-                SendCNT += ll;
+                //SendCNT += ll;
                 _WriteEventArgs.SetBuffer(0, ll);
                 bool f = false;
                 try {
