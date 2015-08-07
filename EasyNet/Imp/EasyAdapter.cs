@@ -39,7 +39,7 @@ namespace EasyNet.Imp {
         public HashSet<string> Subs = new HashSet<string>(StringComparer.CurrentCulture);
 
         internal  void WriteStream(MemoryStream ms) {
-            Write(ms.ToArray(), 0, (int)ms.Length, null); 
+            Write(ms.ToArray(), 0, (int)ms.Length); 
         }
     }
 }

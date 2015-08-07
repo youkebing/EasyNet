@@ -22,23 +22,12 @@ namespace EasyNet.Imp {
                 if (t == null) {
                     return false;
                 }
-                var on = Interlocked.Exchange(ref t.On, null);
-                if (on != null) {
-                    try {
-                        on(e);
-                    }
-                    catch {
-                    }
-                }
                 t.Buf = null;
                 t.Next = null;
                 return FreeObj(t);
             }
         }
         static readonly APool _aPool = new APool(3000);
-        //public int RecCNT = 0;
-        //public int SendCNT = 0;
-        //public int PktCNT = 0;
         public EndPoint RemoteEndPoint;
         SocketAsyncEventArgs _ReadEventArgs;
         SocketAsyncEventArgs _WriteEventArgs;
@@ -225,20 +214,14 @@ namespace EasyNet.Imp {
             }
             return string.Join(" ", s);
         }
-        public void Write(byte[] buf, int offset, int length, Action<Exception> on) {
-            //Interlocked.Increment(ref PktCNT);
-            A a;
+        public void Write(byte[] buf, int offset, int length) {
             if (Closed) {
-                if (on != null) {
-                    on(new Exception("connect is close"));
-                }
                 return;
             }
-            a = _aPool.GetObj();
+            var a = _aPool.GetObj();
             a.Buf = buf;
             a.Offset = offset;
             a.Length = length;
-            a.On = on;
             lock (_wlocker) {
                 if (First == null) {
                     First = a;
@@ -262,7 +245,6 @@ namespace EasyNet.Imp {
             public byte[] Buf;
             public int Offset;
             public int Length;
-            public Action<Exception> On;
             public A Next;
         }
         static Exception NullException = new Exception("err");

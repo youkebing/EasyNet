@@ -255,15 +255,15 @@ namespace EasyNet.Imp {
             buf = ms.ToArray();
             length = (int)ms.Length;
             if (lst.Count == 1) {
-                lst[0].Write(buf, 0, length, null);
+                lst[0].Write(buf, 0, length);
             }
             else if (!rp) {
                 dest = lst[_random.Next(lst.Count)];
-                dest.Write(buf, 0, length, null);
+                dest.Write(buf, 0, length);
             }
             else {
                 foreach (var node in lst) {
-                    node.Write(buf, 0, length, null);
+                    node.Write(buf, 0, length);
                 }
             }
         }

@@ -46,7 +46,7 @@ namespace EasyNet.Imp {
                     ms.WriteBytes(buf, 0, buf.Length);
                     PktHelper.ClosePkt(ms);
                     buf = ms.ToArray();
-                    _Ada.Write(buf, 0, buf.Length, null);
+                    _Ada.Write(buf, 0, buf.Length);
                 }
                 catch {
                 }
@@ -60,7 +60,7 @@ namespace EasyNet.Imp {
             var ms = PktHelper.NewPkt(PktType.Ping);
             PktHelper.ClosePkt(ms);;
             var buf = ms.ToArray();
-            _Ada.Write(buf, 0, buf.Length, null);
+            _Ada.Write(buf, 0, buf.Length);
         }
         public void Rpc(string k, int dly, byte[] buf, Action<byte[], Exception> on) {
             _sch.Post(() => {
@@ -82,7 +82,7 @@ namespace EasyNet.Imp {
                 ms.WriteBytes(buf, 0, buf.Length);
                 PktHelper.ClosePkt(ms);
                 buf = ms.ToArray();
-                _Ada.Write(buf, 0, buf.Length, null);
+                _Ada.Write(buf, 0, buf.Length);
                 if (on == null) {
                     return;
                 }
@@ -124,7 +124,7 @@ namespace EasyNet.Imp {
             ms.WriteStrs(_handes.Keys.ToArray());
             PktHelper.ClosePkt(ms);
             var buf = ms.ToArray();
-            _Ada.Write(buf, 0, buf.Length, null);
+            _Ada.Write(buf, 0, buf.Length);
         }
         bool _syncsubsflag = true;
         void SyncSubs() {
@@ -136,7 +136,7 @@ namespace EasyNet.Imp {
             ms.WriteStrs(_subhandes.Keys.ToArray());
             PktHelper.ClosePkt(ms);
             var buf = ms.ToArray();
-            _Ada.Write(buf, 0, buf.Length, null);
+            _Ada.Write(buf, 0, buf.Length);
         }
         static Sch _sch = new Sch(1);
         SimpleTcpAdapter _Ada = null;
@@ -296,7 +296,7 @@ namespace EasyNet.Imp {
                     }
                     PktHelper.ClosePkt(ms);
                     buf = ms.ToArray();
-                    _Ada.Write(buf, 0, buf.Length, null);
+                    _Ada.Write(buf, 0, buf.Length);
                 };
                 call(es, end);
             }
