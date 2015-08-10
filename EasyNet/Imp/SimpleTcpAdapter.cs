@@ -8,6 +8,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using EasyNet.Base;
 
 namespace EasyNet.Imp {
     public class SimpleTcpAdapter : IDisposable {
@@ -28,9 +29,10 @@ namespace EasyNet.Imp {
             }
         }
         static readonly APool _aPool = new APool(3000);
-        public EndPoint RemoteEndPoint;
         SocketAsyncEventArgs _ReadEventArgs;
         SocketAsyncEventArgs _WriteEventArgs;
+
+        static Sch _wsch = new Sch(1);
 
         readonly int MaxLen;
         public Socket _sc = null;
