@@ -207,13 +207,6 @@ namespace EasyNet.Imp {
             }
         }
         #region AsyncInvork
-        static string ToHex(byte[] buf, int offset, int len) {
-            string[] s = new string[len];
-            for (int i = 0; i < len; i++) {
-                s[i] = buf[offset + i].ToString("X2");
-            }
-            return string.Join(" ", s);
-        }
         public void Write(byte[] buf, int offset, int length) {
             if (Closed) {
                 return;
