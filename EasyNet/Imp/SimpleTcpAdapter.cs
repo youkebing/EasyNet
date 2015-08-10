@@ -44,11 +44,11 @@ namespace EasyNet.Imp {
             catch {
             }
         }
-        SocketAsyncEventArgs InitEventArgs(EventHandler<SocketAsyncEventArgs> h) {
+        SocketAsyncEventArgs InitEventArgs(EventHandler<SocketAsyncEventArgs> evhandler) {
             SocketAsyncEventArgs e = PoolManage.GetScEv();
             var buf = PoolManage.GetBuf();
             e.SetBuffer(buf, 0, buf.Length);
-            e.Completed += h;
+            e.Completed += evhandler;
             return e;
         }
         void UnInitEventArgs(SocketAsyncEventArgs e, EventHandler<SocketAsyncEventArgs> h) {
@@ -58,17 +58,16 @@ namespace EasyNet.Imp {
             PoolManage.FreeScEv(e);
         }
         public Action<byte[], int, int> OnData { get; set; }
-        public SimpleTcpAdapter(Socket socket_) {  
-            _sc = socket_;
+        public SimpleTcpAdapter(Socket sc) {  
+            _sc = sc;
             _ReadEventArgs = InitEventArgs(OnReadCompleted);
             _WriteEventArgs = InitEventArgs(OnWriteCompleted);
             try {
-                socket_.IOControl(keepAlive, inValue, null);
+                sc.IOControl(keepAlive, inValue, null);
             }
             catch {
             }
             MaxLen = _ReadEventArgs.Buffer.Length; 
-            //Read();
         }
 
         int _flag = 1;
