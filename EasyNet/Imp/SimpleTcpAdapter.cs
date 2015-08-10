@@ -31,6 +31,10 @@ namespace EasyNet.Imp {
             if (ms.Position < 1024 * 50) {
                 return;
             }
+            if (ms.Length == 0) {
+                ms = new MemoryStream();
+                return;
+            }
             var dest = new MemoryStream();
             ms.CopyTo(dest);
             dest.Position = 0;
@@ -38,6 +42,9 @@ namespace EasyNet.Imp {
         }
         void _Write() {
             if (_writeflag) {
+                return;
+            }
+            if (_wms == null) {
                 return;
             }
             if ((_wms.Length - _wms.Position) <= 0) {
@@ -79,9 +86,12 @@ namespace EasyNet.Imp {
                 return;
             }
             _wsch.Post(() => {
+                if (_wms == null) {
+                    return;
+                }
                 var p = _wms.Position;
                 _wms.Position = _wms.Length;
-                _wms.WriteBytes(buf, offset, length);
+                _wms.Write(buf, offset, length);
                 _wms.Position = p;
                 _Write();
             });
