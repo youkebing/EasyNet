@@ -51,11 +51,14 @@ namespace EasyNet.Imp {
             e.Completed += evhandler;
             return e;
         }
-        void UnInitEventArgs(SocketAsyncEventArgs e, EventHandler<SocketAsyncEventArgs> h) {
-            var buf = e.Buffer;
-            e.Completed -= h;
+        void UnInitEventArgs(SocketAsyncEventArgs ev, EventHandler<SocketAsyncEventArgs> h) {
+            if (ev == null) {
+                return;
+            }
+            var buf = ev.Buffer;
+            ev.Completed -= h;
             PoolManage.FreeBuf(buf);
-            PoolManage.FreeScEv(e);
+            PoolManage.FreeScEv(ev);
         }
         public Action<byte[], int, int> OnData { get; set; }
 
@@ -194,10 +197,7 @@ namespace EasyNet.Imp {
                     f = _sc.ReceiveAsync(_ReadEventArgs);
                 }
                 catch {
-                    var ev = Interlocked.Exchange(ref _ReadEventArgs, null);
-                    if (ev != null) {
-                        UnInitEventArgs(ev, OnReadCompleted);
-                    }
+                    UnInitEventArgs(Interlocked.Exchange(ref _ReadEventArgs, null), OnReadCompleted);
                     throw;
                 }
                 if (!f) {
@@ -326,18 +326,13 @@ namespace EasyNet.Imp {
                 return;
             }
             try {
-                //Console.WriteLine("sned " + ll);
-                //SendCNT += ll;
                 _WriteEventArgs.SetBuffer(0, ll);
                 bool f = false;
                 try {
                     f = _sc.SendAsync(_WriteEventArgs);
                 }
                 catch {
-                    var ev = Interlocked.Exchange(ref _WriteEventArgs, null);
-                    if (ev != null) {
-                        UnInitEventArgs(ev, OnWriteCompleted);
-                    }
+                    UnInitEventArgs(Interlocked.Exchange(ref _WriteEventArgs, null), OnWriteCompleted);
                     throw;
                 }
                 if (!f) {
