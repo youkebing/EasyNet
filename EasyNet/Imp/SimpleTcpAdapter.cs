@@ -12,27 +12,80 @@ using EasyNet.Base;
 
 namespace EasyNet.Imp {
     public class SimpleTcpAdapter : IDisposable {
-        class APool : SimpleObjPool<A> {
-            protected override A NewObj() {
-                return new A();
-            }
-            public APool(int Len)
-                : base(Len) {
-            }
-            public bool FreeObj(A t, Exception e) {
-                if (t == null) {
-                    return false;
-                }
-                t.Buf = null;
-                t.Next = null;
-                return FreeObj(t);
-            }
-        }
-        static readonly APool _aPool = new APool(3000);
         SocketAsyncEventArgs _ReadEventArgs;
         SocketAsyncEventArgs _WriteEventArgs;
 
         static Sch _wsch = new Sch(1);
+        MemoryStream _wms = new MemoryStream();
+        bool _writeflag = false;
+
+        void _WriteNext() {
+            _writeflag = false;
+            _Write();
+        }
+
+        void ZipStream(ref MemoryStream ms) {  
+            if (ms.Position == 0) {
+                return;
+            }
+            if (ms.Position < 1024 * 50) {
+                return;
+            }
+            var dest = new MemoryStream();
+            ms.CopyTo(dest);
+            dest.Position = 0;
+            ms = dest;
+        }
+        void _Write() {
+            if (_writeflag) {
+                return;
+            }
+            if ((_wms.Length - _wms.Position) <= 0) {
+                return;
+            }
+            try {
+                var buf = _WriteEventArgs.Buffer;
+                var length = _wms.Read(buf, 0, buf.Length);
+                ZipStream(ref _wms);
+                _WriteEventArgs.SetBuffer(0, length);
+                bool f = false;
+                try {
+                    f = _sc.SendAsync(_WriteEventArgs);
+                }
+                catch {
+                    UnInitEventArgs(Interlocked.Exchange(ref _WriteEventArgs, null), OnWriteCompleted);
+                    Free();
+                    throw;
+                }
+                if (!f) {
+                    try {
+                        OnWriteCompleted(this, _WriteEventArgs);
+                    }
+                    catch {
+                    };
+                }
+            }
+            catch (Exception e) {
+                Console.WriteLine(e.Message);
+                _writeflag = false;
+                Free();
+                return;
+            }  
+            _writeflag = true;
+        }
+
+        public void Write(byte[] buf, int offset, int length) {
+            if (Closed) {
+                return;
+            }
+            _wsch.Post(() => {
+                var p = _wms.Position;
+                _wms.Position = _wms.Length;
+                _wms.WriteBytes(buf, offset, length);
+                _wms.Position = p;
+                _Write();
+            });
+        }
 
         readonly int MaxLen;
         public Socket _sc = null;
@@ -138,16 +191,10 @@ namespace EasyNet.Imp {
                     Free();
                     len = 0;
                 }
-                else {
-                    DisposeLast(null, null);
-                }
             }
             catch {
             }
-            lock (_wlocker) {
-                _WriteFlag = false;
-            } 
-            _Write();
+            _wsch.Post(_WriteNext);
         }
 
         #region Dispose
@@ -168,20 +215,8 @@ namespace EasyNet.Imp {
             Socket sc = Interlocked.Exchange<Socket>(ref _sc, null);
             if (sc == null)
                 return;
+            _wms = null;
             SocketHelper.FreeSocket(sc);
-            try {
-                A v;
-                DisposeLast(null, NullException);
-                lock (_wlocker) {
-                    Last = null;
-                    v = First;
-                    First = null;
-                }
-                DisposeA(v, NullException);
-            }
-            catch (Exception ee) {
-                Console.WriteLine(ee.Message);
-            }
             try {
                 OnClose();
             }
@@ -210,149 +245,5 @@ namespace EasyNet.Imp {
                 Free();
             }
         }
-        #region AsyncInvork
-        public void Write(byte[] buf, int offset, int length) {
-            if (Closed) {
-                return;
-            }
-            var a = _aPool.GetObj();
-            a.Buf = buf;
-            a.Offset = offset;
-            a.Length = length;
-            lock (_wlocker) {
-                if (First == null) {
-                    First = a;
-                    Last = a;
-                }
-                else {
-                    Last.Next = a;
-                    Last = a;
-                }
-                if (_WriteFlag) {
-                    return;
-                }
-            }
-            _Write();
-        }
-
-        A First = null;
-        A Last = null;
-        object _wlocker = new object();
-        bool _WriteFlag = false;
-        class A {
-            public byte[] Buf;
-            public int Offset;
-            public int Length;
-            public A Next;
-        }
-        static Exception NullException = new Exception("err");
-
-        void DisposeA(A c, Exception e) {
-            try {
-                while (c != null) {
-                    var a = c.Next;
-                    _aPool.FreeObj(c, e);
-                    c = a;
-                }
-            }
-            catch {
-            }
-        }
-        void DisposeLast(A a, Exception e) {
-            var c = Interlocked.Exchange(ref _DisposeA, a);
-            DisposeA(c, e);
-        }
-
-        A _DisposeA = null;
-
-        void _Write() {
-            A F = null;
-            
-            lock (_wlocker) {
-                if (_WriteFlag) {
-                    return;
-                }
-                if (First == null) {
-                    Last = null;
-                    return;
-                } 
-                F = First;
-                A L = F;
-                int len = 0;
-                while(true) {
-                    len += L.Length;
-                    if (len >= MaxLen) {
-                        break;
-                    }
-                    var aa = L.Next;
-                    if (aa == null) {
-                        break;
-                    }
-                    L = aa;
-                }
-                if (len > MaxLen) {
-                    A a = new A();
-                    a.Buf = L.Buf;
-                    a.Length = len - MaxLen;
-                    L.Length = L.Length - a.Length;
-                    a.Offset = L.Offset + L.Length;
-                    var lx = L.Next;
-                    L.Next = a;
-                    a.Next = lx;
-                    if (Last == L) {
-                        Last = a;
-                    }
-                }
-                First = L.Next;
-                L.Next = null;
-                if (First == null) {
-                    Last = null;
-                }
-                
-                _WriteFlag = true;
-            }
-            int ll = 0;
-            var buf = _WriteEventArgs.Buffer;
-            DisposeLast(F, NullException);
-            while (F != null) {
-                Buffer.BlockCopy(F.Buf, F.Offset, buf, ll, F.Length);
-                ll += F.Length;
-                var a = F.Next; 
-                F = a;
-            }
-            if (ll <= 0) {
-                lock (_wlocker) {
-                    _WriteFlag = false;
-                }
-                _Write();
-                return;
-            }
-            try {
-                _WriteEventArgs.SetBuffer(0, ll);
-                bool f = false;
-                try {
-                    f = _sc.SendAsync(_WriteEventArgs);
-                }
-                catch {
-                    UnInitEventArgs(Interlocked.Exchange(ref _WriteEventArgs, null), OnWriteCompleted);
-                    throw;
-                }
-                if (!f) {
-                    try {
-                        OnWriteCompleted(this, _WriteEventArgs);
-                    }
-                    catch { 
-                    };
-                }
-            }
-            catch(Exception e) {
-                Console.WriteLine(e.Message);
-                lock (_wlocker) {
-                    _WriteFlag = false;
-                }
-                Free();
-            }
-        }
-        #endregion
     }
 }
