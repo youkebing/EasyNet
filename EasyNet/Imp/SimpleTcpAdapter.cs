@@ -58,6 +58,27 @@ namespace EasyNet.Imp {
             PoolManage.FreeScEv(e);
         }
         public Action<byte[], int, int> OnData { get; set; }
+
+        /*
+        -----------------------------------------------------------------------------------------------------------------
+          Socket与拔掉网线
+        -----------------------------------------------------------------------------------------------------------------
+        当客户端与服务端通过Tcp Socket进行通信时，如果客户端应用正常退出或异常退出，服务端都会在对应的连接上获取感知（如
+        返回0、或抛出异常）。但是，如果客户端的网线被拔掉，那么，默认情况下，服务端需要在2个小时后才会感知客户端掉线。对
+        于很多服务端应用程序来说，这么长的反应时间是不能忍受的。
+        我们通常在应用层使用“心跳机制”来解决类似的问题，这是可行的。
+        然而，在这里，我们可以使用Socket自己的心跳机制来解决这一问题。 
+        System.Net.Sockets.Socket提供了IOControl（）方法给我们来设置Sokect的心跳机制的相关参数。比如，我们设置KeepAlive的
+        时间为20秒，检查间隔为2秒。可以这样做：
+        int keepAlive = -1744830460; // SIO_KEEPALIVE_VALS
+        byte[] inValue = new byte[] { 1, 0, 0, 0, 0x20, 0x4e, 0, 0, 0xd0, 0x07, 0, 0 }; //True, 20 秒, 2 秒
+        sock.IOControl(keepAlive, inValue, null);
+        20秒（20000毫秒）的16进制表示是4e20，2秒（2000毫秒）的16进制表示是07d0，如此，你可以修改inValue参数为自己希望的值。
+        在上述设置下，如果拨掉客户端网线，服务器Socket.Receive()会在20秒后抛出异常（注意，在这20秒服务端内无论是从该socket
+        上接收消息还是发送消息都不会抛出异常！）。
+        */
+        static int keepAlive = -1744830460; // SIO_KEEPALIVE_VALS
+        static byte[] inValue = new byte[] { 1, 0, 0, 0, 0x40, 0x9C, 0, 0, 0x58, 0x1B, 0, 0 }; //True, 20 秒, 2 秒
         public SimpleTcpAdapter(Socket sc) {  
             _sc = sc;
             _ReadEventArgs = InitEventArgs(OnReadCompleted);
@@ -88,7 +109,6 @@ namespace EasyNet.Imp {
                 int len = _ReadEventArgs.BytesTransferred;
                 int offset = _ReadEventArgs.Offset;
                 var buf = _ReadEventArgs.Buffer;
-                //RecCNT += len;
                 if ((len <= 0) || (_ReadEventArgs.SocketError != SocketError.Success)) {
                     Free();
                     len = 0;
@@ -107,7 +127,6 @@ namespace EasyNet.Imp {
         }
         void OnWriteCompleted(object sender, SocketAsyncEventArgs e) {
             try {
-                //Console.WriteLine("Write__End");
                 int len = _WriteEventArgs.BytesTransferred;
 
                 if ((len < 0) || (_WriteEventArgs.SocketError != SocketError.Success)) {
@@ -125,22 +144,6 @@ namespace EasyNet.Imp {
             } 
             _Write();
         }
-
-        #region NewTcpAdapter
-        /*
-        Socket与拔掉网线
-   当客户端与服务端通过Tcp Socket进行通信时，如果客户端应用正常退出或异常退出，服务端都会在对应的连接上获取感知（如返回0、或抛出异常）。但是，如果客户端的网线被拔掉，那么，默认情况下，服务端需要在2个小时后才会感知客户端掉线。对于很多服务端应用程序来说，这么长的反应时间是不能忍受的。
-   我们通常在应用层使用“心跳机制”来解决类似的问题，这是可行的。
-   然而，在这里，我们可以使用Socket自己的心跳机制来解决这一问题。 System.Net.Sockets.Socket提供了IOControl（）方法给我们来设置Sokect的心跳机制的相关参数。比如，我们设置KeepAlive的时间为20秒，检查间隔为2秒。可以这样做：
-            int keepAlive = -1744830460; // SIO_KEEPALIVE_VALS
-            byte[] inValue = new byte[] { 1, 0, 0, 0, 0x20, 0x4e, 0, 0, 0xd0, 0x07, 0, 0 }; //True, 20 秒, 2 秒
-            sock.IOControl(keepAlive, inValue, null);
-   20秒（20000毫秒）的16进制表示是4e20，2秒（2000毫秒）的16进制表示是07d0，如此，你可以修改inValue参数为自己希望的值。
-   在上述设置下，如果拨掉客户端网线，服务器Socket.Receive()会在20秒后抛出异常（注意，在这20秒服务端内无论是从该socket上接收消息还是发送消息都不会抛出异常！）。
-*/
-        static int keepAlive = -1744830460; // SIO_KEEPALIVE_VALS
-        static byte[] inValue = new byte[] { 1, 0, 0, 0, 0x40, 0x9C, 0, 0, 0x58, 0x1B, 0, 0 }; //True, 20 秒, 2 秒
-        #endregion
 
         #region Dispose
         public void Dispose() {
