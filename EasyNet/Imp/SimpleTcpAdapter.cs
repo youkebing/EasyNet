@@ -15,30 +15,15 @@ namespace EasyNet.Imp {
         SocketAsyncEventArgs _ReadEventArgs;
         SocketAsyncEventArgs _WriteEventArgs;
 
-        static Sch _wsch = new Sch(1);
+        static Sch[] _schs = new Sch[] { new Sch(1), new Sch(1), new Sch(1), new Sch(1)};
+
+        Sch _wsch;
         MemoryStream _wms = new MemoryStream();
         bool _writeflag = false;
 
         void _WriteNext() {
             _writeflag = false;
             _Write();
-        }
-
-        void ZipStream(ref MemoryStream ms) {  
-            if (ms.Position == 0) {
-                return;
-            }
-            if (ms.Position < 1024 * 50) {
-                return;
-            }
-            if (ms.Length == 0) {
-                ms = new MemoryStream();
-                return;
-            }
-            var dest = new MemoryStream();
-            ms.CopyTo(dest);
-            dest.Position = 0;
-            ms = dest;
         }
         void _Write() {
             if (_writeflag) {
@@ -47,29 +32,33 @@ namespace EasyNet.Imp {
             if (_wms == null) {
                 return;
             }
-            if ((_wms.Length - _wms.Position) <= 0) {
+            if ((_wms.Length) <= 0) {
                 return;
             }
             try {
-                var buf = _WriteEventArgs.Buffer;
-                var length = _wms.Read(buf, 0, buf.Length);
-                ZipStream(ref _wms);
-                _WriteEventArgs.SetBuffer(0, length);
+                if (Closed) {
+                    _wms = null;
+                    return;
+                }
+                var buf = _wms.GetBuffer();
+                var length = _wms.Length;
+                _wms = null;
+                _WriteEventArgs.SetBuffer(buf, 0, (int)length);
                 bool f = false;
                 try {
                     f = _sc.SendAsync(_WriteEventArgs);
+                    _writeflag = true;
+                    if (!f) {
+                        try {
+                            OnWriteCompleted(this, _WriteEventArgs);
+                        }
+                        catch {
+                        };
+                    }
                 }
                 catch {
                     UnInitEventArgs(Interlocked.Exchange(ref _WriteEventArgs, null), OnWriteCompleted);
                     Free();
-                    throw;
-                }
-                if (!f) {
-                    try {
-                        OnWriteCompleted(this, _WriteEventArgs);
-                    }
-                    catch {
-                    };
                 }
             }
             catch (Exception e) {
@@ -78,7 +67,6 @@ namespace EasyNet.Imp {
                 Free();
                 return;
             }  
-            _writeflag = true;
         }
 
         public void Write(byte[] buf, int offset, int length) {
@@ -86,13 +74,13 @@ namespace EasyNet.Imp {
                 return;
             }
             _wsch.Post(() => {
-                if (_wms == null) {
+                if (Closed) {
                     return;
                 }
-                var p = _wms.Position;
-                _wms.Position = _wms.Length;
+                if (_wms == null) {
+                    _wms = new MemoryStream();
+                }
                 _wms.Write(buf, offset, length);
-                _wms.Position = p;
                 _Write();
             });
         }
@@ -119,11 +107,19 @@ namespace EasyNet.Imp {
         void UnInitEventArgs(SocketAsyncEventArgs ev, EventHandler<SocketAsyncEventArgs> h) {
             if (ev == null) {
                 return;
-            }
-            var buf = ev.Buffer;
+            } 
             ev.Completed -= h;
+            var buf = ev.Buffer;
             PoolManage.FreeBuf(buf);
             PoolManage.FreeScEv(ev);
+        }
+
+        void FreeWriteEv() {
+            var ev = Interlocked.Exchange(ref _WriteEventArgs, null);
+            if (ev == null) {
+                return;
+            }
+            UnInitEventArgs(ev, OnWriteCompleted);
         }
         public Action<byte[], int, int> OnData { get; set; }
 
@@ -147,6 +143,7 @@ namespace EasyNet.Imp {
         */
         static int keepAlive = -1744830460; // SIO_KEEPALIVE_VALS
         static byte[] inValue = new byte[] { 1, 0, 0, 0, 0x40, 0x9C, 0, 0, 0x58, 0x1B, 0, 0 }; //True, 20 秒, 2 秒
+        static int __ii = 0;
         public SimpleTcpAdapter(Socket sc) {  
             _sc = sc;
             _ReadEventArgs = InitEventArgs(OnReadCompleted);
@@ -156,6 +153,9 @@ namespace EasyNet.Imp {
             }
             catch {
             }
+            var index = Interlocked.Increment(ref __ii);
+            index = Math.Abs(index) % _schs.Length;
+            _wsch = _schs[index]; 
             MaxLen = _ReadEventArgs.Buffer.Length; 
         }
 
@@ -163,7 +163,7 @@ namespace EasyNet.Imp {
         public virtual void Start() {
             int f = Interlocked.Exchange(ref _flag, 0);
             if (f != 0) {
-                Read();
+                _wsch.Post(Read);
             }
         }
 
@@ -172,7 +172,8 @@ namespace EasyNet.Imp {
                 return _sc == null;
             }
         }
-        void OnReadCompleted(object sender, SocketAsyncEventArgs e) {
+
+        void OnReadPkt() {
             try {
                 int len = _ReadEventArgs.BytesTransferred;
                 int offset = _ReadEventArgs.Offset;
@@ -193,6 +194,10 @@ namespace EasyNet.Imp {
                 Free();
             }
         }
+
+        void OnReadCompleted(object sender, SocketAsyncEventArgs e) {
+            _wsch.Post(OnReadPkt);
+        }
         void OnWriteCompleted(object sender, SocketAsyncEventArgs e) {
             try {
                 int len = _WriteEventArgs.BytesTransferred;
@@ -201,10 +206,13 @@ namespace EasyNet.Imp {
                     Free();
                     len = 0;
                 }
+                else {
+                    _wsch.Post(_WriteNext);
+                }
             }
             catch {
+                Free();
             }
-            _wsch.Post(_WriteNext);
         }
 
         #region Dispose
@@ -226,7 +234,8 @@ namespace EasyNet.Imp {
             if (sc == null)
                 return;
             _wms = null;
-            SocketHelper.FreeSocket(sc);
+            SocketHelper.FreeSocket(sc); 
+            _wsch.Post(FreeWriteEv);
             try {
                 OnClose();
             }
@@ -234,11 +243,13 @@ namespace EasyNet.Imp {
             }
         }
         #endregion
-
         void Read() {
+            _wsch.Post(_Read);
+        }
+        void _Read() {
             try {
-                var buf = _ReadEventArgs.Buffer;
-                _ReadEventArgs.SetBuffer(0, MaxLen);
+                //var buf = _ReadEventArgs.Buffer;
+                //_ReadEventArgs.SetBuffer(0, MaxLen);
                 bool f = false;
                 try {
                     f = _sc.ReceiveAsync(_ReadEventArgs);

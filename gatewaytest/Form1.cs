@@ -20,5 +20,9 @@ namespace c11 {
             api.SetEP(new IPEndPoint(IPAddress.Any, 9000));
             api.Start();
         }
+
+        private void button1_Click(object sender, EventArgs e) {
+            GC.Collect();
+        }
     }
 }
