@@ -15,8 +15,21 @@ namespace EasyNet.Imp {
         SocketAsyncEventArgs _ReadEventArgs;
         SocketAsyncEventArgs _WriteEventArgs;
 
-        static Sch[] _schs = new Sch[] { new Sch(1), new Sch(1), new Sch(1), new Sch(1)};
+        static Sch[] _schs;
 
+        static SimpleTcpAdapter() {
+            var cnt = Environment.ProcessorCount;
+            if (cnt <= 0) {
+                cnt = 1;
+            }
+            else if (cnt > 20) {
+                cnt = 20;
+            }
+            _schs = new Sch[cnt];
+            for (int i = 0; i < cnt; i++) {
+                _schs[i] = new Sch(1);
+            }
+        }
         Sch _wsch;
         MemoryStream _wms = new MemoryStream();
         bool _writeflag = false;
