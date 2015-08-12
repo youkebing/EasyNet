@@ -84,8 +84,6 @@ namespace EasyNet.Imp {
                 _Write();
             });
         }
-
-        readonly int MaxLen;
         public Socket _sc = null;
         protected virtual void OnRead(byte[] buf, int offset, int length) {
             if (length <= 0) {
@@ -156,7 +154,6 @@ namespace EasyNet.Imp {
             var index = Interlocked.Increment(ref __ii);
             index = Math.Abs(index) % _schs.Length;
             _wsch = _schs[index]; 
-            MaxLen = _ReadEventArgs.Buffer.Length; 
         }
 
         int _flag = 1;
