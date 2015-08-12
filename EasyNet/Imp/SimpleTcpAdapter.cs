@@ -173,7 +173,7 @@ namespace EasyNet.Imp {
         public virtual void Start() {
             int f = Interlocked.Exchange(ref _flag, 0);
             if (f != 0) {
-                _wsch.Post(Read);
+                _wsch.Post(_Read);
             }
         }
 
@@ -198,7 +198,7 @@ namespace EasyNet.Imp {
                     Buffer.BlockCopy(buf, offset, b, 0, len);
                     OnRead(b, 0, len);
                 }
-                Read();
+                _Read();
             }
             catch {
                 Free();
@@ -208,9 +208,11 @@ namespace EasyNet.Imp {
         void OnReadCompleted(object sender, SocketAsyncEventArgs e) {
             _wsch.Post(OnReadPkt);
         }
+        static byte[] _gdbuf = new byte[1];
         void OnWriteCompleted(object sender, SocketAsyncEventArgs e) {
             try {
                 int len = _WriteEventArgs.BytesTransferred;
+                _WriteEventArgs.SetBuffer(_gdbuf, 0, 1);
 
                 if ((len < 0) || (_WriteEventArgs.SocketError != SocketError.Success)) {
                     Free();
@@ -221,6 +223,11 @@ namespace EasyNet.Imp {
                 }
             }
             catch {
+                try {
+                    _WriteEventArgs.SetBuffer(_gdbuf, 0, 1);
+                }
+                catch {
+                }
                 Free();
             }
         }
@@ -253,9 +260,6 @@ namespace EasyNet.Imp {
             }
         }
         #endregion
-        void Read() {
-            _wsch.Post(_Read);
-        }
         void _Read() {
             try {
                 //var buf = _ReadEventArgs.Buffer;

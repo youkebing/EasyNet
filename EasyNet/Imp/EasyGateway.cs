@@ -18,7 +18,10 @@ namespace EasyNet.Imp {
         //订阅的请求列表
         Dictionary<string, List<EasyAdapter>> _Subs = new Dictionary<string, List<EasyAdapter>>(StringComparer.CurrentCultureIgnoreCase);
         Dictionary<string, List<EasyAdapter>> _Rpcs = new Dictionary<string, List<EasyAdapter>>(StringComparer.CurrentCultureIgnoreCase);
-
+        public int MaxConnectCount {
+            get;
+            set;
+        }
         public int NewID() {
             while (true) {
                 int ii = Interlocked.Increment(ref _adapterid);
@@ -138,6 +141,7 @@ namespace EasyNet.Imp {
         }
         public EasyGateway() {
             _listen.OnNewAccept = OnNewSocket;
+            MaxConnectCount = 300;
             Excute(InitPktCall);
         }
 
@@ -155,7 +159,11 @@ namespace EasyNet.Imp {
         }
         void OnNewSocket(Socket sc) {
             Excute(() => {
-                EasyAdapter a = new EasyAdapter(this, sc);
+                if (_AllAdapters.Count > MaxConnectCount) {
+                    SocketHelper.FreeSocket(sc);
+                    return;
+                }
+                var a = new EasyAdapter(this, sc);
                 _AllAdapters[a.ID] = a;
                 a.OnClose = this.Poll;
             });
