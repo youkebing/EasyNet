@@ -20,7 +20,7 @@ namespace c1test {
             return DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss");                        //    127,0,0,1 192, 168, 168, 229
         }
 
-        EasyClient _node = new EasyClient(new IPEndPoint(new IPAddress(new byte[] { 127, 0, 0, 1 }), 9000), DateTime.Now.Ticks.ToString());
+        EasyClient _node = new EasyClient(new IPEndPoint(new IPAddress(new byte[] { 192, 168, 168, 229 }), 9000), DateTime.Now.Ticks.ToString());
         private void button1_Click(object sender, EventArgs e) {
             _node.Start(() => { Console.WriteLine(_node.Active.ToString()); });
             _node.RegSub("wuxi", buf => {
