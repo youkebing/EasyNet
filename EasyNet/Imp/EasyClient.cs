@@ -56,6 +56,7 @@ namespace EasyNet.Imp {
             _sch.Post(_Ping);
         }
         public Action OnPongMsg { get; set; }
+        public Action OnOpen { get; set; }
         void _Ping() {
             var ms = PktHelper.NewPkt(PktType.Ping);
             PktHelper.ClosePkt(ms);;
@@ -343,6 +344,17 @@ namespace EasyNet.Imp {
             catch {
             }
         }
+        void OnOpenPkt(byte[] buf, int offset, int length) {
+            var on = OnOpen;
+            if (on == null) {
+                return;
+            }
+            try {
+                on();
+            }
+            catch {
+            }
+        }
         Action<byte[], int, int>[] _calls;
         void InitPktCall() {
             _calls = new Action<byte[], int, int>[(int)PktType.MAXLEN];
@@ -354,6 +366,7 @@ namespace EasyNet.Imp {
             _calls[(int)PktType.PubData] = OnPubData;                  //PubData = 10,
             _calls[(int)PktType.RpcErr] = OnRpcErr;                    //RpcErr = 11,
             _calls[(int)PktType.Pong] = OnPong;                        //OnPong = 11,
+            _calls[(int)PktType.Open] = OnOpenPkt;                        //OnPong = 11,
         }
     }
 }

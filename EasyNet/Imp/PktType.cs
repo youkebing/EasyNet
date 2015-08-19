@@ -14,6 +14,7 @@ namespace EasyNet.Imp {
         RpcErr = 7,
         Ping = 8,
         Pong = 9,
-        MAXLEN = 10
+        Open = 10,
+        MAXLEN = 11
     }
 }

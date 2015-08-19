@@ -166,6 +166,9 @@ namespace EasyNet.Imp {
                 var a = new EasyAdapter(this, sc);
                 _AllAdapters[a.ID] = a;
                 a.OnClose = this.Poll;
+                var ms = PktHelper.NewPkt(PktType.Open);
+                PktHelper.ClosePkt(ms);
+                a.WriteStream(ms);
             });
         }
         public void Excute(Action exc) {
