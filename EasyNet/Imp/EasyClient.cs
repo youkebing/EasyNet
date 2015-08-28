@@ -115,6 +115,14 @@ namespace EasyNet.Imp {
                 }
             });
         }
+        public void GatewaySync() {
+            _sch.Post(() => {
+                _syncf = true;
+                _syncsubsflag = true;  
+                _sch.Post(SyncHandles);
+                _sch.Post(SyncSubs);
+            });
+        }
         bool _syncf = true;
         void SyncHandles() {
             if (!_syncf) {
@@ -172,12 +180,10 @@ namespace EasyNet.Imp {
                     v.Free();
                     v.OnData = null;
                 }
-                _timer.DlyExcute(5, () => {
-                    _sch.Post(SyncHandles);
-                    _sch.Post(SyncSubs);
+                _timer.DlyExcute(10000, () => {
+                    GatewaySync();
                 });
-                _sch.Post(SyncHandles);
-                _sch.Post(SyncSubs);
+                GatewaySync();
             }
             catch {
                 if (ada != null) {
@@ -346,14 +352,14 @@ namespace EasyNet.Imp {
         }
         void OnOpenPkt(byte[] buf, int offset, int length) {
             var on = OnOpen;
-            if (on == null) {
-                return;
+            if (on != null) {
+                try {
+                    on();
+                }
+                catch {
+                }
             }
-            try {
-                on();
-            }
-            catch {
-            }
+            GatewaySync();
         }
         Action<byte[], int, int>[] _calls;
         void InitPktCall() {
