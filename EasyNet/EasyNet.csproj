@@ -34,6 +34,7 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Base\EasyUri.cs" />
     <Compile Include="Base\MinHeap.cs" />
     <Compile Include="Base\Sch.cs" />
     <Compile Include="Base\SimpleTimer.cs" />
