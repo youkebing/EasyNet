@@ -39,7 +39,7 @@ namespace c1test {
         }
 
         private void button3_Click(object sender, EventArgs e) {
-            int cnt = 10;
+            int cnt = 1;
             int rr = cnt;
             DateTime ks = DateTime.Now;
             DateTime sj = DateTime.Now;
