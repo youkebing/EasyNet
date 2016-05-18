@@ -1,4 +1,4 @@
-package easynet
+package goeasynet
 
 import (
 	"bufio"
