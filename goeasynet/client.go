@@ -200,7 +200,7 @@ func (this *EasyNetGo) Pub(k string, brocast bool, buf []byte) {
 
 func (this *EasyNetGo) Rpc(k string, dly int, data []byte) ([]byte, error) {
 	if this.conn == nil {
-		return nil, proceetimerout
+		return nil, noconnecterr
 	}
 	if dly <= 0 {
 		dly = 1
@@ -279,6 +279,8 @@ func (this *EasyNetGo) taskReadPkt(url string) {
 		if err != nil {
 			fmt.Println("Error connecting:", err)
 			continue
+		} else {
+			fmt.Println("connect ok.......", tcpAddr)
 		}
 
 		this.readconn(conn)
@@ -451,6 +453,7 @@ func (this *EasyNetGo) readconn(conn net.Conn) {
 				this.conn = nil
 				conn.Close()
 			}
+			fmt.Println("connect close!")
 		})
 	}()
 	this.saftRun(func() {
