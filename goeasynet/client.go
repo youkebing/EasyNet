@@ -34,8 +34,8 @@ const proOpen = 10
 const proMAXLEN = 11
 
 var (
-	noconnecterr   = errors.New("No connect to data bus!")
-	proceetimerout = errors.New("process timer out!")
+	noconnecterr   = errors.New("Data service connection fails !")
+	proceetimerout = errors.New("Data Processing Service timeout !")
 )
 
 type EasyNetGo struct {
